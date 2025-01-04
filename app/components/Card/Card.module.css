@@ -1,0 +1,32 @@
+
+
+.image{
+    width: 100px;
+    height: auto;
+    align-items: center;
+}
+
+.card{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: white;
+    border-radius: 30px;
+    padding: 20px;
+    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.description{
+    font-size: small;
+    
+    
+}
+.price{
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.title{
+    margin-bottom: 20px;
+}
