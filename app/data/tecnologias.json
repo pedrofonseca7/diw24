@@ -1,0 +1,20 @@
+[
+    {
+      "title": "HTML",
+      "image": "/images/HTML_icon_resized_250px.webp",
+      "description": "A linguagem de marcação para construção de páginas web.",
+      "rating": 5
+    },
+    {
+      "title": "CSS",
+      "image": "/images/CSS_icon_resized_250px.webp",
+      "description": "Usada para estilizar páginas web.",
+      "rating": 4
+    },
+    {
+      "title": "JavaScript",
+      "image": "/images/JavaScript_icon_resized_250px.webp",
+      "description": "A linguagem de programação para a web.",
+      "rating": 5
+    }
+  ]

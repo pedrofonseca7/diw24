@@ -1,101 +1,167 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useState, useEffect } from 'react';
+import useSWR from 'swr';
+import { Product } from './models/interfaces';
+import ProductCard from './components/CardProduto/ProdutoCard';
+
+
+export default function Page() {
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
+  const { data, error } = useSWR<Product[]>('/api/products', fetcher);
+  const [search, setSearch] = useState('');
+  const [cart, setCart] = useState<Product[]>([]);
+  const [postResponse, setPostResponse] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const storedCart = localStorage.getItem('cart');
+    if (storedCart) {
+      setCart(JSON.parse(storedCart));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
+
+  const addToCart = (product: Product) => {
+    setCart((prevCart) => [...prevCart, product]);
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCart((prevCart) => prevCart.filter((product) => product.id !== productId));
+  };
+
+  const buy = () => {
+    const isEstudante = (
+      document.querySelector('input[name="estudante_deisi"]') as HTMLInputElement
+    )?.checked || false;
+  
+    const cupao = (
+      document.getElementById('cupao') as HTMLInputElement
+    )?.value || '';
+  
+    const nomeCliente = prompt("Digite o seu nome para concluir a compra:");
+  
+    if (!nomeCliente) {
+      alert("O nome é obrigatório para concluir a compra.");
+      return;
+    }
+  
+    const body = {
+      products: cart.map((product) => product.id), 
+      student: isEstudante, 
+      coupon: cupao, 
+      name: nomeCliente, 
+    };
+  
+    fetch('/api/products/deisishop/buy', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((data) => {
+            throw new Error(data.error || "Erro desconhecido");
+          });
+        }
+        return response.json();
+      })
+      .then((response) => {
+        setPostResponse(
+          `Compra realizada com sucesso!\n
+          ${response.message}\n
+          ${response.address}\n
+          Total: ${response.totalCost} €\n
+          Referência de pagamento: ${response.reference}`
+        );
+        
+        setCart([]); 
+      })
+      .catch((error) => {
+        setPostResponse(`Erro ao processar a compra: ${error.message}`);
+      });
+  };
+  
+  
+  
+
+  if (error) return <div>Failed to load</div>;
+  if (!data) return <div>Loading...</div>;
+
+  const filteredProducts = data.filter((prod) =>
+    prod.title.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div>
+      <h1>Produtos</h1>
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Pesquisar produtos..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+      </div>
+  
+      <div className="product-grid">
+  {filteredProducts.map((product) => (
+    <ProductCard
+      key={product.id}
+      title={product.title}
+      price={product.price}
+      description={product.description}
+      imgSrc={product.image}
+      buttonLabel="+ Adicionar ao Carrinho"
+      buttonAction={() => addToCart(product)}
+      showDescription={true}
+    />
+  ))}
+</div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+<h1>Carrinho</h1>
+<div className="product-grid cart-grid">
+  {cart.map((item) => (
+    <ProductCard
+      key={item.id}
+      title={item.title}
+      price={item.price}
+      description={item.description}
+      imgSrc={item.image}
+      buttonLabel="- Remover"
+      buttonAction={() => removeFromCart(item.id)}
+      showDescription={false}
+    />
+  ))}
+</div>
+      <p>
+        Total: {cart.reduce((total, item) => total + Number(item.price), 0).toFixed(2)} €
+      </p>
+  
+      <section id="menu-compra">
+  <p>
+    És estudante do DEISI?
+    <input type="checkbox" name="estudante_deisi" value="sim" />
+  </p>
+  <p>
+    Cupão de desconto: <input type="text" id="cupao" />
+  </p>
+  <button id='botao-comprar' onClick={buy}>Comprar</button>
+  
+  {postResponse &&
+  postResponse.split("\n").map((line, index) => (
+    <p key={index} className="post-response">
+      {line}
+    </p>
+  ))}
+
+</section>
+
     </div>
   );
 }
