@@ -3,3 +3,4 @@ export async function GET() {
     const data = await result.json()
     return Response.json(data)
 }
+

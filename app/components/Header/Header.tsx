@@ -6,7 +6,7 @@ import Link from 'next/link'
 export default function Header() {
   return (
     <header className={styles.header}>
-    <h1>React e Next.js</h1>
+    <h1>DEISI Shop</h1>
     <nav className={styles.nav}>
     <Link href="/">Home</Link>
     </nav>
